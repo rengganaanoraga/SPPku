@@ -1,0 +1,148 @@
+/* SQL Manager for MySQL                              5.6.0.47256 */
+/* -------------------------------------------------------------- */
+/* Host     : localhost                                           */
+/* Port     : 3306                                                */
+/* Database : db_pondokpesantren                                  */
+
+
+/*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
+/*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
+/*!40101 SET @OLD_COLLATION_CONNECTION=@@COLLATION_CONNECTION */;
+/*!40101 SET NAMES 'latin1' */;
+
+SET FOREIGN_KEY_CHECKS=0;
+
+CREATE DATABASE `db_pondokpesantren`
+    CHARACTER SET 'latin1'
+    COLLATE 'latin1_swedish_ci';
+
+USE `db_pondokpesantren`;
+
+/* Structure for the `tb_bulan` table : */
+
+CREATE TABLE `tb_bulan` (
+  `id_bulan` INTEGER(4) NOT NULL AUTO_INCREMENT,
+  `nama_bulan` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  PRIMARY KEY USING BTREE (`id_bulan`)
+) ENGINE=InnoDB
+AUTO_INCREMENT=13 CHARACTER SET 'latin1' COLLATE 'latin1_swedish_ci'
+;
+
+/* Structure for the `tb_kas` table : */
+
+CREATE TABLE `tb_kas` (
+  `id_kas` INTEGER(4) NOT NULL AUTO_INCREMENT,
+  `bulan` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `tahun` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `jumlah` INTEGER(100) DEFAULT NULL,
+  `deskripsi` VARCHAR(50) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `status` VARCHAR(2) COLLATE latin1_swedish_ci DEFAULT NULL COMMENT 'Status untuk membedakan apakah kas tersebut masuk atau keluar',
+  `tanggal_kas` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY USING BTREE (`id_kas`)
+) ENGINE=InnoDB
+AUTO_INCREMENT=1 CHARACTER SET 'latin1' COLLATE 'latin1_swedish_ci'
+;
+
+/* Structure for the `tb_santri` table : */
+
+CREATE TABLE `tb_santri` (
+  `id` INTEGER(4) NOT NULL AUTO_INCREMENT,
+  `nama` VARCHAR(100) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `jenis_kelamin` INTEGER(2) DEFAULT NULL,
+  `tempat_lahir` VARCHAR(50) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `tanggal_lahir` DATE DEFAULT NULL,
+  `alamat` TEXT COLLATE latin1_swedish_ci,
+  `nama_orangtua` VARCHAR(50) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `no_handphone` VARCHAR(15) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `gambar_profile` VARCHAR(100) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `status` INTEGER(2) DEFAULT NULL,
+  `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `update_at` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `is_deleted` INTEGER(2) DEFAULT NULL,
+  PRIMARY KEY USING BTREE (`id`)
+) ENGINE=InnoDB
+AUTO_INCREMENT=2 CHARACTER SET 'latin1' COLLATE 'latin1_swedish_ci'
+;
+
+/* Structure for the `tb_pembayaran` table : */
+
+CREATE TABLE `tb_pembayaran` (
+  `id_pembayaran` INTEGER(4) NOT NULL AUTO_INCREMENT,
+  `no_pembayaran` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `id_santri` INTEGER(4) DEFAULT NULL,
+  `jumlah_bayar` INTEGER(100) DEFAULT NULL,
+  `tanggal_pembayaran` DATETIME DEFAULT CURRENT_TIMESTAMP,
+  `bulan` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `tahun` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `jumlah_iuran` INTEGER(100) DEFAULT NULL,
+  `status_iuran` ENUM('1') COLLATE latin1_swedish_ci DEFAULT '1',
+  `deskripsi_iuran` VARCHAR(150) COLLATE latin1_swedish_ci DEFAULT NULL,
+  PRIMARY KEY USING BTREE (`id_pembayaran`),
+  KEY `id_santri` USING BTREE (`id_santri`),
+  CONSTRAINT `tb_pembayaran_fk1` FOREIGN KEY (`id_santri`) REFERENCES `tb_santri` (`id`)
+) ENGINE=InnoDB
+AUTO_INCREMENT=1 CHARACTER SET 'latin1' COLLATE 'latin1_swedish_ci'
+;
+
+/* Structure for the `tb_user` table : */
+
+CREATE TABLE `tb_user` (
+  `id_user` INTEGER(4) NOT NULL AUTO_INCREMENT,
+  `username` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  `password` VARCHAR(20) COLLATE latin1_swedish_ci DEFAULT NULL,
+  PRIMARY KEY USING BTREE (`id_user`)
+) ENGINE=InnoDB
+AUTO_INCREMENT=1 CHARACTER SET 'latin1' COLLATE 'latin1_swedish_ci'
+;
+
+/* Data for the `tb_bulan` table  (LIMIT 0,500) */
+
+INSERT INTO `tb_bulan` (`id_bulan`, `nama_bulan`) VALUES
+  (1,'Januari'),
+  (2,'Februari'),
+  (3,'Maret'),
+  (4,'April'),
+  (5,'Mei'),
+  (6,'Juni'),
+  (7,'Juli'),
+  (8,'Agustus'),
+  (9,'September'),
+  (10,'Oktober'),
+  (11,'November'),
+  (12,'Desember');
+COMMIT;
+
+/* Data for the `tb_santri` table  (LIMIT 0,500) */
+
+INSERT INTO `tb_santri` (`id`, `nama`, `jenis_kelamin`, `tempat_lahir`, `tanggal_lahir`, `alamat`, `nama_orangtua`, `no_handphone`, `gambar_profile`, `status`, `created_at`, `update_at`, `is_deleted`) VALUES
+  (1,'alex',1,'malang','2019-11-09','malang','pak alek','0897866468','-',1,'2019-12-11 20:22:50',NULL,1);
+COMMIT;
+
+/* Definition for the `tb_pembayaran_after_ins_tr1` trigger : */
+
+DELIMITER $$
+
+CREATE DEFINER = 'root'@'localhost' TRIGGER `tb_pembayaran_after_ins_tr1` AFTER INSERT ON `tb_pembayaran`
+  FOR EACH ROW
+BEGIN
+INSERT INTO 
+  `tb_kas`
+(
+  `bulan`,
+  `tahun`,
+  `jumlah`,
+  `deskripsi`,
+  `tanggal_kas`) 
+VALUE (
+  NEW.bulan,
+  NEW.tahun,
+  NEW.jumlah_bayar - 15000,
+  NEW.deskripsi_iuran,
+  NEW.tanggal_pembayaran);
+END$$
+
+DELIMITER ;
+
+/*!40101 SET CHARACTER_SET_CLIENT=@OLD_CHARACTER_SET_CLIENT */;
+/*!40101 SET CHARACTER_SET_RESULTS=@OLD_CHARACTER_SET_RESULTS */;
+/*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
